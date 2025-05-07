@@ -18,7 +18,7 @@ Add this library to your Swift project using **Swift Package Manager**:
 1. In Xcode, go to **File > Add Packages...**
 2. Enter the repository URL:
    ```
-   [YOUR_REPOSITORY_URL_HERE]
+   https://github.com/auhgnayuo/swift_pip.git
    ```
 3. Follow the prompts to add the package to your project.
 
