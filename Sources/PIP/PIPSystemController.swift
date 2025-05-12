@@ -1,5 +1,5 @@
 //
-//  SystemController.swift
+//  PIPSystemController.swift
 //  PIP
 //
 //  Created by auhgnayuo on 2025/4/14.
@@ -9,65 +9,63 @@ import AVKit
 
 /// SystemController is a wrapper around AVPictureInPictureController for system-level PiP management.
 /// It manages delegate forwarding, PiP state, and compatibility with different iOS versions.
-extension PIP {
-    @objcMembers
-    open class SystemController: AVPictureInPictureController {
-        /// Initializes the system PiP controller with a content source (iOS 15+).
-        /// - Parameter contentSource: The AVKit content source for PiP.
-        @available(iOS 15.0, *)
-        override public init(contentSource: AVPictureInPictureController.ContentSource) {
-            super.init(contentSource: contentSource)
-            super.delegate = self
-        }
-
-        /// The delegate for PiP controller events. This property is overridden to allow custom forwarding.
-        /// Note: When Picture-in-Picture is active, this delegate will be strongly retained to ensure it remains available during PiP lifecycle events.
-        override open weak var delegate: AVPictureInPictureControllerDelegate? {
-            get {
-                return realDelegate
-            }
-            set {
-                realDelegate = newValue
-            }
-        }
-
-        /// Whether PiP can start automatically from inline (iOS 14.2+).
-        @available(iOS 14.2, *)
-        override open var canStartPictureInPictureAutomaticallyFromInline: Bool {
-            get {
-                return _canStartPictureInPictureAutomaticallyFromInline
-            }
-            set {
-                _canStartPictureInPictureAutomaticallyFromInline = newValue
-            }
-        }
-
-        /// The real system property for automatic PiP start (iOS 14.2+).
-        @available(iOS 14.2, *)
-        var realCanStartPictureInPictureAutomaticallyFromInline: Bool {
-            set {
-                super.canStartPictureInPictureAutomaticallyFromInline = true
-            }
-            get {
-                return super.canStartPictureInPictureAutomaticallyFromInline
-            }
-        }
-
-        /// Strong reference to the delegate to ensure it is retained during PiP lifecycle events.
-        fileprivate var strongDelegate: AVPictureInPictureControllerDelegate?
-        /// Internal property for tracking automatic PiP start.
-        private var _canStartPictureInPictureAutomaticallyFromInline = false
-        /// The real delegate for PiP events.
-        private weak var realDelegate: AVPictureInPictureControllerDelegate?
-        /// Strong reference to the PIP delegate for internal use.
-        private var strongPIPDelegate: PIP.Delegate?
-        /// Weak reference to the parent PIP instance.
-        weak var pip: PIP?
+@objcMembers
+open class PIPSystemController: AVPictureInPictureController {
+    /// Initializes the system PiP controller with a content source (iOS 15+).
+    /// - Parameter contentSource: The AVKit content source for PiP.
+    @available(iOS 15.0, *)
+    override public init(contentSource: AVPictureInPictureController.ContentSource) {
+        super.init(contentSource: contentSource)
+        super.delegate = self
     }
+
+    /// The delegate for PiP controller events. This property is overridden to allow custom forwarding.
+    /// Note: When Picture-in-Picture is active, this delegate will be strongly retained to ensure it remains available during PiP lifecycle events.
+    override open weak var delegate: AVPictureInPictureControllerDelegate? {
+        get {
+            return realDelegate
+        }
+        set {
+            realDelegate = newValue
+        }
+    }
+
+    /// Whether PiP can start automatically from inline (iOS 14.2+).
+    @available(iOS 14.2, *)
+    override open var canStartPictureInPictureAutomaticallyFromInline: Bool {
+        get {
+            return _canStartPictureInPictureAutomaticallyFromInline
+        }
+        set {
+            _canStartPictureInPictureAutomaticallyFromInline = newValue
+        }
+    }
+
+    /// The real system property for automatic PiP start (iOS 14.2+).
+    @available(iOS 14.2, *)
+    var realCanStartPictureInPictureAutomaticallyFromInline: Bool {
+        set {
+            super.canStartPictureInPictureAutomaticallyFromInline = true
+        }
+        get {
+            return super.canStartPictureInPictureAutomaticallyFromInline
+        }
+    }
+
+    /// Strong reference to the delegate to ensure it is retained during PiP lifecycle events.
+    fileprivate var strongDelegate: AVPictureInPictureControllerDelegate?
+    /// Internal property for tracking automatic PiP start.
+    private var _canStartPictureInPictureAutomaticallyFromInline = false
+    /// The real delegate for PiP events.
+    private weak var realDelegate: AVPictureInPictureControllerDelegate?
+    /// Strong reference to the PIP delegate for internal use.
+    private var strongPIPDelegate: PIPDelegate?
+    /// Weak reference to the parent PIP instance.
+    weak var pip: PIP?
 }
 
 /// AVPictureInPictureControllerDelegate conformance for SystemController.
-extension PIP.SystemController: @preconcurrency AVPictureInPictureControllerDelegate {
+extension PIPSystemController: @preconcurrency AVPictureInPictureControllerDelegate {
     /// Called before PiP starts. Retains delegates and notifies the real delegate.
     @MainActor
     open func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {

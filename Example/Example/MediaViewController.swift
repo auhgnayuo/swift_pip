@@ -12,7 +12,7 @@ import RxSwift
 import UIKit
 import WebKit
 
-protocol PIPDelegate: PIP.Delegate {
+protocol PIPDelegateEx: PIPDelegate {
     var pipReusableIdentifier: String? { get }
     func pipRequestStop(with handler: @escaping (Bool) -> Void)
 }
@@ -44,8 +44,8 @@ class MediaViewController: UIViewController {
     
     lazy var pip: PIP? = PIP(delegate: self)
     
-    lazy var pipCustomController: PIP.CustomController? = {
-        let v = PIP.CustomController(contentSource: .init(contentViewController: FloatingViewController(), sourceView: sourceView))
+    lazy var pipCustomController: PIPCustomController? = {
+        let v = PIPCustomController(contentSource: .init(contentViewController: FloatingViewController(), sourceView: sourceView))
         v.delegate = self
         return v
     }()
@@ -187,7 +187,7 @@ class MediaViewController: UIViewController {
     }
 }
 
-extension MediaViewController: PIPDelegate {
+extension MediaViewController: PIPDelegateEx {
     func pipRequestStop(with handler: @escaping (Bool) -> Void) {
         if !isRecording {
             handler(true)
@@ -200,29 +200,29 @@ extension MediaViewController: PIPDelegate {
     }
 }
 
-extension MediaViewController: PIP.CustomControllerDelegate {
-    func customPictureInPictureControllerWillStartPictureInPicture(pictureInPictureController: PIP.CustomController) {
+extension MediaViewController: PIPCustomControllerDelegate {
+    func customPictureInPictureControllerWillStartPictureInPicture(pictureInPictureController: PIPCustomController) {
         (pipCustomController?.contentSource?.contentViewController as? FloatingViewController)?.willStart()
         sourceView.isHidden = true
     }
     
-    func customPictureInPictureController(_ pictureInPictureController: PIP.CustomController, failedToStartPictureInPictureWithError error: any Error) {
+    func customPictureInPictureController(_ pictureInPictureController: PIPCustomController, failedToStartPictureInPictureWithError error: any Error) {
         sourceView.isHidden = false
     }
     
-    func customPictureInPictureControllerWillStopPictureInPicture(pictureInPictureController: PIP.CustomController) {
+    func customPictureInPictureControllerWillStopPictureInPicture(pictureInPictureController: PIPCustomController) {
         if !isRestoring {
             isPlaying = false
         }
         isRestoring = false
     }
     
-    func customPictureInPictureControllerDidStopPictureInPicture(pictureInPictureController: PIP.CustomController) {
+    func customPictureInPictureControllerDidStopPictureInPicture(pictureInPictureController: PIPCustomController) {
         sourceView.isHidden = false
         (pipCustomController?.contentSource?.contentViewController as? FloatingViewController)?.didStop()
     }
     
-    func customPictureInPictureController(_ pictureInPictureController: PIP.CustomController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+    func customPictureInPictureController(_ pictureInPictureController: PIPCustomController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
         isRestoring = true
         if let nc = nc {
             if nc.viewControllers.contains(self) {

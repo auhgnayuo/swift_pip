@@ -14,7 +14,7 @@ class NavigationController: UINavigationController {
     }
 
     override func pushViewController(_ viewController: UIViewController, animated: Bool) {
-        guard let targetDelegate = viewController as? PIPDelegate, let currentDelegate = PIP.current?.delegate as? PIPDelegate, let currentViewController = currentDelegate as? UIViewController else {
+        guard let targetDelegate = viewController as? PIPDelegateEx, let currentDelegate = PIP.current?.delegate as? PIPDelegateEx, let currentViewController = currentDelegate as? UIViewController else {
             super.pushViewController(viewController, animated: animated)
             return
         }
@@ -43,21 +43,21 @@ class NavigationController: UINavigationController {
         super.pushViewController(currentViewController, animated: animated)
     }
     
-    @discardableResult
-    func superPopViewController(animated: Bool) -> UIViewController? {
-        return super.popViewController(animated: animated)
-    }
-
-    override func popViewController(animated: Bool) -> UIViewController? {
-        guard let currentDelegate = viewControllers.last as? PIPDelegate else {
-            return super.popViewController(animated: animated)
-        }
-        currentDelegate.pipRequestStop {[weak self] result in
-            guard let self, result else {
-                return
-            }
-            superPopViewController(animated: animated)
-        }
-        return nil
-    }
+//    @discardableResult
+//    func superPopViewController(animated: Bool) -> UIViewController? {
+//        return super.popViewController(animated: animated)
+//    }
+//
+//    override func popViewController(animated: Bool) -> UIViewController? {
+//        guard let currentDelegate = viewControllers.last as? PIPDelegateEx else {
+//            return super.popViewController(animated: animated)
+//        }
+//        currentDelegate.pipRequestStop {[weak self] result in
+//            guard let self, result else {
+//                return
+//            }
+//            superPopViewController(animated: animated)
+//        }
+//        return nil
+//    }
 }

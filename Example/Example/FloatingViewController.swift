@@ -8,7 +8,7 @@
 import PIP
 import UIKit
 
-class FloatingViewController: PIP.CustomController.ContentViewController {
+class FloatingViewController: PIPCustomContentViewController {
     lazy var blurEffect = {
         let v = UIBlurEffect(style: .dark)
         return v
@@ -32,7 +32,7 @@ class FloatingViewController: PIP.CustomController.ContentViewController {
         v.setTitle("Close", for: .normal)
         v.setTitleColor(.white, for: .normal)
         v.rx.controlEvent(.touchUpInside).subscribe { [weak self] _ in
-            guard let self, let controller, let delegate = controller.delegate as? PIPDelegate else {
+            guard let self, let controller, let delegate = controller.delegate as? PIPDelegateEx else {
                 return
             }
             delegate.pipRequestStop(with: { result in

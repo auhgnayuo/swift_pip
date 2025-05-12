@@ -8,17 +8,10 @@ import AVKit
 @objcMembers
 @MainActor
 open class PIP: NSObject, @unchecked Sendable {
-    /// Delegate protocol for providing custom and system PiP controllers.
-    @objc public protocol Delegate: NSObjectProtocol {
-        /// The custom PiP controller, if any.
-        @objc optional var pipCustomController: CustomController? { get }
-        /// The system PiP controller, if any.
-        @objc optional var pipSystemController: SystemController? { get }
-    }
-    
+
     /// Initializes a new PIP instance with an optional delegate.
     /// - Parameter delegate: The delegate providing PiP controllers.
-    public init(delegate: Delegate? = nil) {
+    public init(delegate: PIPDelegate? = nil) {
         self.delegate = delegate
     }
     
@@ -27,10 +20,10 @@ open class PIP: NSObject, @unchecked Sendable {
     
     /// The delegate providing PiP controllers.
     /// Note: When Picture-in-Picture is active, this delegate will be strongly retained to ensure it remains available during PiP lifecycle events.
-    open weak var delegate: Delegate?
+    open weak var delegate: PIPDelegate?
     
     /// Strong reference to the delegate to ensure it is retained during PiP lifecycle events.
-    private var strongDelegate: Delegate?
+    private var strongDelegate: PIPDelegate?
     
     /// Returns true if either the custom or system PiP controller is currently active.
     open var isPictureInPictureActive: Bool {
@@ -86,7 +79,7 @@ open class PIP: NSObject, @unchecked Sendable {
     }
         
     /// The custom PiP controller provided by the delegate, if any. Sets the pip property for back-reference.
-    open var customController: PIP.CustomController? {
+    open var customController: PIPCustomController? {
         if let customController = delegate?.pipCustomController {
             customController?.pip = self
             return customController
@@ -95,7 +88,7 @@ open class PIP: NSObject, @unchecked Sendable {
     }
     
     /// The system PiP controller provided by the delegate, if any. Sets the pip property for back-reference.
-    open var systemController: PIP.SystemController? {
+    open var systemController: PIPSystemController? {
         if let systemController = delegate?.pipSystemController {
             systemController?.pip = self
             return systemController

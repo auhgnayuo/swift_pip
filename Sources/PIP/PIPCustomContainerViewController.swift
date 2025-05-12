@@ -1,146 +1,143 @@
-// CustomControllerContainerViewController.swift
+// PIPCustomContainerViewController.swift
 // PIP
 //
 // Created by auhgnayuo on 2025/4/14.
 //
-// This file defines the ContainerViewController class, which manages the container for Picture-in-Picture (PiP) custom controllers. It handles the addition, removal, and replacement of content sources, as well as user interactions such as gestures for moving and resizing the PiP window. The controller ensures smooth transitions and state management for PiP content.
 
 import UIKit
 
-extension PIP.CustomController {
-    /// ContainerViewController manages the lifecycle and user interactions of a custom PiP container.
-    /// It is responsible for adding, removing, and replacing content sources, handling gestures, and managing layout transitions.
-    class ContainerViewController: UIViewController {
-        /// Sets up the main view as a ContainerView and enables user interaction.
-        override func loadView() {
-            let v = ContainerView()
-            v.isUserInteractionEnabled = true
-            view = v
+/// PIPCustomContainerViewController manages the lifecycle and user interactions of a custom PiP container.
+/// It is responsible for adding, removing, and replacing content sources, handling gestures, and managing layout transitions.
+@objcMembers
+class PIPCustomContainerViewController: UIViewController {
+    /// Sets up the main view as a ContainerView and enables user interaction.
+    override func loadView() {
+        let v = PIPCustomContainerView()
+        v.isUserInteractionEnabled = true
+        view = v
+    }
+    
+    /// Adds gesture recognizers and performs additional setup after the view is loaded.
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.addGestureRecognizer(panGestureRecognizer)
+    }
+    
+    /// Handles layout and animator reset when the device orientation or size class changes.
+    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        guard let contentView = contentSource?.contentViewController.contentView, contentSource?.controller != nil else {
+            return
         }
-        
-        /// Adds gesture recognizers and performs additional setup after the view is loaded.
-        override func viewDidLoad() {
-            super.viewDidLoad()
-            view.addGestureRecognizer(panGestureRecognizer)
-        }
-        
-        /// Handles layout and animator reset when the device orientation or size class changes.
-        override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
-            super.viewWillTransition(to: size, with: coordinator)
-            guard let contentView = contentSource?.contentViewController.contentView, contentSource?.controller != nil else {
-                return
-            }
-            let containerView = contentView.containerView
-            let layout = contentView.adaptiveLayout()
-            animator?.removeAllBehaviors()
-            animator = nil
-            contentView.layout = layout
-            contentView.setNeedsLayout()
-            containerView?.layoutIfNeeded()
-        }
-        
-        /// The current content source being managed by the container. Setting this property triggers the appropriate add, remove, or replace logic.
-        var contentSource: ContentSource? {
-            didSet {
-                let oldContentSource = oldValue
-                let newContentSource = contentSource
-                let isAddition = oldContentSource == nil && newContentSource != nil
-                let isRemovment = oldContentSource != nil && newContentSource == nil
-                let isReplacement = oldContentSource != nil && newContentSource != nil && oldContentSource != newContentSource
-                // Determine the type of content source change and call the corresponding handler.
-                if isAddition {
-                    let shouldMove = newContentSource!.sourceView != nil
-                    if shouldMove {
-                        addWithMovement(newContentSource!)
-                    } else {
-                        add(newContentSource!)
-                    }
-                } else if isRemovment {
-                    let shouldMove = oldContentSource!.sourceView != nil
-                    if shouldMove && oldContentSource!.shouldRestoreUserInterface {
-                        removeWithMovement(oldContentSource!)
-                    } else {
-                        remove(oldContentSource!)
-                    }
-                } else if isReplacement {
-                    replace(oldContentSource!, newContentSource!)
+        let containerView = contentView.containerView
+        let layout = contentView.adaptiveLayout()
+        animator?.removeAllBehaviors()
+        animator = nil
+        contentView.layout = layout
+        contentView.setNeedsLayout()
+        containerView?.layoutIfNeeded()
+    }
+    
+    /// The current content source being managed by the container. Setting this property triggers the appropriate add, remove, or replace logic.
+    var contentSource: PIPCustomContentSource? {
+        didSet {
+            let oldContentSource = oldValue
+            let newContentSource = contentSource
+            let isAddition = oldContentSource == nil && newContentSource != nil
+            let isRemovment = oldContentSource != nil && newContentSource == nil
+            let isReplacement = oldContentSource != nil && newContentSource != nil && oldContentSource != newContentSource
+            // Determine the type of content source change and call the corresponding handler.
+            if isAddition {
+                let shouldMove = newContentSource!.sourceView != nil
+                if shouldMove {
+                    addWithMovement(newContentSource!)
+                } else {
+                    add(newContentSource!)
                 }
+            } else if isRemovment {
+                let shouldMove = oldContentSource!.sourceView != nil
+                if shouldMove && oldContentSource!.shouldRestoreUserInterface {
+                    removeWithMovement(oldContentSource!)
+                } else {
+                    remove(oldContentSource!)
+                }
+            } else if isReplacement {
+                replace(oldContentSource!, newContentSource!)
             }
         }
-        
-        /// Expands the PiP window to its full size and saves the layout state.
-        func expand() {
-            guard let contentView = contentSource?.contentViewController.contentView else {
-                return
-            }
-            let layout = contentView.adaptiveLayout(collapse: false)
-            if let layout {
-                Layout.save(layout: layout)
-            }
-            animator?.removeAllBehaviors()
-            animator = nil
-            contentView.layout = layout
-            contentView.setNeedsLayout()
-            containerView.layoutIfNeeded()
+    }
+    
+    /// Expands the PiP window to its full size and saves the layout state.
+    func expand() {
+        guard let contentView = contentSource?.contentViewController.contentView else {
+            return
         }
-        
-        /// Collapses the PiP window to its minimized state and saves the layout state.
-        func collapse() {
-            guard let contentView = contentSource?.contentViewController.contentView else {
-                return
-            }
-            let layout = contentView.adaptiveLayout(collapse: true)
-            if let layout {
-                Layout.save(layout: layout)
-            }
-            animator?.removeAllBehaviors()
-            animator = nil
-            contentView.layout = layout
-            contentView.setNeedsLayout()
-            containerView.layoutIfNeeded()
+        let layout = contentView.adaptiveLayout(collapse: false)
+        if let layout {
+            PIPCustomLayout.save(layout: layout)
         }
-        
-        /// Returns the main container view casted to ContainerView.
-        var containerView: ContainerView {
-            return view as! ContainerView
+        animator?.removeAllBehaviors()
+        animator = nil
+        contentView.layout = layout
+        contentView.setNeedsLayout()
+        containerView.layoutIfNeeded()
+    }
+    
+    /// Collapses the PiP window to its minimized state and saves the layout state.
+    func collapse() {
+        guard let contentView = contentSource?.contentViewController.contentView else {
+            return
         }
-        
-        /// Pan gesture recognizer for handling drag and move gestures on the PiP window.
-        private lazy var panGestureRecognizer = {
-            let v = UIPanGestureRecognizer()
-            v.delegate = self
-            v.addTarget(self, action: #selector(updatePan(_:)))
-            return v
-        }()
-        
-        /// Animator for handling dynamic behaviors and animations.
-        private var animator: DynamicAnimator?
-        
-        /// Handles the state changes of the pan gesture recognizer and delegates to the appropriate handler.
-        @objc private func updatePan(_ recognizer: UIPanGestureRecognizer) {
-            switch recognizer.state {
-            case .began:
-                onPanGestureRecognizedBegin(recognizer)
-            case .changed:
-                onPanGestureRecognizedChange(recognizer)
-            case .cancelled:
-                fallthrough
-            case .failed:
-                fallthrough
-            case .ended:
-                onPanGestureRecognizerEnded(recognizer)
-            default:
-                break
-            }
+        let layout = contentView.adaptiveLayout(collapse: true)
+        if let layout {
+            PIPCustomLayout.save(layout: layout)
+        }
+        animator?.removeAllBehaviors()
+        animator = nil
+        contentView.layout = layout
+        contentView.setNeedsLayout()
+        containerView.layoutIfNeeded()
+    }
+    
+    /// Returns the main container view casted to ContainerView.
+    var containerView: PIPCustomContainerView {
+        return view as! PIPCustomContainerView
+    }
+    
+    /// Pan gesture recognizer for handling drag and move gestures on the PiP window.
+    private lazy var panGestureRecognizer = {
+        let v = UIPanGestureRecognizer()
+        v.delegate = self
+        v.addTarget(self, action: #selector(updatePan(_:)))
+        return v
+    }()
+    
+    /// Animator for handling dynamic behaviors and animations.
+    private var animator: DynamicAnimator?
+    
+    /// Handles the state changes of the pan gesture recognizer and delegates to the appropriate handler.
+    @objc private func updatePan(_ recognizer: UIPanGestureRecognizer) {
+        switch recognizer.state {
+        case .began:
+            onPanGestureRecognizedBegin(recognizer)
+        case .changed:
+            onPanGestureRecognizedChange(recognizer)
+        case .cancelled:
+            fallthrough
+        case .failed:
+            fallthrough
+        case .ended:
+            onPanGestureRecognizerEnded(recognizer)
+        default:
+            break
         }
     }
 }
 
-/// 更换源相关
-extension PIP.CustomController.ContainerViewController {
+extension PIPCustomContainerViewController {
     /// Adds a new content source to the container. Handles the initial setup and animation for PiP activation.
     /// Ensures that the content source is valid and not replaced/removed during async operations.
-    private func add(_ contentSource: PIP.CustomController.ContentSource) {
+    private func add(_ contentSource: PIPCustomContentSource) {
         let taskId = NSObject()
         contentSource.taskId = taskId
         DispatchQueue.main.async { [weak self] in
@@ -169,7 +166,7 @@ extension PIP.CustomController.ContainerViewController {
             addChild(contentVC)
             contentView.alpha = 0
             containerView.addSubview(contentView)
-            contentView.layout = PIP.CustomController.Layout.restore(controller.placeholderLayout)
+            contentView.layout = PIPCustomLayout.restore(controller.placeholderLayout)
             containerView.layoutIfNeeded()
             contentView.layout = contentView.adaptiveLayout()
             contentView.setNeedsLayout()
@@ -187,7 +184,7 @@ extension PIP.CustomController.ContainerViewController {
     
     /// Adds a new content source to the container with a movement animation from a source view.
     /// This is used when the PiP window should appear to move from a specific UI element.
-    private func addWithMovement(_ contentSource: PIP.CustomController.ContentSource) {
+    private func addWithMovement(_ contentSource: PIPCustomContentSource) {
         let taskId = NSObject()
         contentSource.taskId = taskId
         let source = contentSource.sourceView!.convert(contentSource.sourceView!.bounds, to: view)
@@ -222,7 +219,7 @@ extension PIP.CustomController.ContainerViewController {
             containerView.layoutIfNeeded()
             DispatchQueue.main.async {
                 controller.animate {
-                    contentView.layout = PIP.CustomController.Layout.restore(controller.placeholderLayout)
+                    contentView.layout = PIPCustomLayout.restore(controller.placeholderLayout)
                     containerView.layoutIfNeeded()
                     contentView.layout = contentView.adaptiveLayout()
                     contentView.setNeedsLayout()
@@ -239,7 +236,7 @@ extension PIP.CustomController.ContainerViewController {
     
     /// Removes the current content source from the container, handling cleanup and animation.
     /// If the content source requires UI restoration, it waits for the restoration to complete before removal.
-    private func remove(_ contentSource: PIP.CustomController.ContentSource) {
+    private func remove(_ contentSource: PIPCustomContentSource) {
         guard let controller = contentSource.controller else {
             return
         }
@@ -276,7 +273,7 @@ extension PIP.CustomController.ContainerViewController {
             let containerView = containerView
             let layout = contentVC.contentView.adaptiveLayout()
             if let layout {
-                PIP.CustomController.Layout.save(layout: layout)
+                PIPCustomLayout.save(layout: layout)
             }
             animator?.removeAllBehaviors()
             animator = nil
@@ -296,13 +293,13 @@ extension PIP.CustomController.ContainerViewController {
                     contentVC.removeFromParent()
                     controller.didStopPictureInPicture()
                 }
-                var window = PIP.CustomController.Window.instance
+                var window = PIPCustomWindow.instance
                 DispatchQueue.main.asyncAfter(wallDeadline: .now() + 1.0/Double(UIScreen.main.maximumFramesPerSecond)) {
                     let _ = window
                     window = nil
                 }
-                if PIP.CustomController.Window.instance?.containerViewController.contentSource == nil {
-                    PIP.CustomController.Window.instance = nil
+                if PIPCustomWindow.instance?.containerViewController.contentSource == nil {
+                    PIPCustomWindow.instance = nil
                 }
             }
         }
@@ -310,7 +307,7 @@ extension PIP.CustomController.ContainerViewController {
     
     /// Removes the current content source from the container with a movement animation back to the source view.
     /// This is used when the PiP window should appear to return to a specific UI element. Handles UI restoration if needed.
-    private func removeWithMovement(_ contentSource: PIP.CustomController.ContentSource) {
+    private func removeWithMovement(_ contentSource: PIPCustomContentSource) {
         guard let controller = contentSource.controller else {
             return
         }
@@ -348,7 +345,7 @@ extension PIP.CustomController.ContainerViewController {
             let sourceView = contentSource.sourceView
             let layout = contentVC.contentView.adaptiveLayout()
             if let layout {
-                PIP.CustomController.Layout.save(layout: layout)
+                PIPCustomLayout.save(layout: layout)
             }
             animator?.removeAllBehaviors()
             animator = nil
@@ -377,13 +374,13 @@ extension PIP.CustomController.ContainerViewController {
                     contentVC.removeFromParent()
                     controller.didStopPictureInPicture()
                 }
-                var window = PIP.CustomController.Window.instance
+                var window = PIPCustomWindow.instance
                 DispatchQueue.main.asyncAfter(wallDeadline: .now() + 1.0/Double(UIScreen.main.maximumFramesPerSecond)) {
                     let _ = window
                     window = nil
                 }
-                if PIP.CustomController.Window.instance?.containerViewController.contentSource == nil {
-                    PIP.CustomController.Window.instance = nil
+                if PIPCustomWindow.instance?.containerViewController.contentSource == nil {
+                    PIPCustomWindow.instance = nil
                 }
             }
         }
@@ -391,14 +388,14 @@ extension PIP.CustomController.ContainerViewController {
     
     /// Replaces the current content source with a new one, animating the transition between the two.
     /// Ensures both sources share the same controller and synchronizes their layout during the transition.
-    private func replace(_ oldContentSource: PIP.CustomController.ContentSource, _ newContentSource: PIP.CustomController.ContentSource) {
+    private func replace(_ oldContentSource: PIPCustomContentSource, _ newContentSource: PIPCustomContentSource) {
         guard let controller = oldContentSource.controller, controller == newContentSource.controller else {
             return
         }
         let taskId = NSObject()
         oldContentSource.taskId = taskId
         newContentSource.taskId = taskId
-        let containerView = view as! PIP.CustomController.ContainerView
+        let containerView = view as! PIPCustomContainerView
         let oldContentViewController = oldContentSource.contentViewController
         let newContentViewController = newContentSource.contentViewController
         oldContentViewController.willMove(toParent: nil)
@@ -424,7 +421,7 @@ extension PIP.CustomController.ContainerViewController {
 
 // MARK: - Gesture Handling
 
-extension PIP.CustomController.ContainerViewController: UIGestureRecognizerDelegate {
+extension PIPCustomContainerViewController: UIGestureRecognizerDelegate {
     /// Called when a pan gesture begins. Prepares the content view for movement by removing any layout constraints and stopping animations.
     private func onPanGestureRecognizedBegin(_ recognizer: UIPanGestureRecognizer) {
         let contentView = contentSource?.contentViewController.contentView
@@ -447,7 +444,7 @@ extension PIP.CustomController.ContainerViewController: UIGestureRecognizerDeleg
         guard let contentViewController = contentSource?.contentViewController else {
             return
         }
-        let contentView = contentViewController.view as! PIP.CustomController.ContentView
+        let contentView = contentViewController.view as! PIPCustomContentView
         let translation = recognizer.translation(in: recognizer.view)
         let center = contentView.center
         contentView.center = CGPointMake(center.x + translation.x, center.y + translation.y)
