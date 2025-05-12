@@ -61,7 +61,7 @@ public final class PIPCustomWindow: UIWindow {
     ///   - point: The point to test.
     ///   - event: The event associated with the touch.
     /// - Returns: The view that should receive the touch, or nil if outside PiP content.
-    override open func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+    override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         if containerViewController.contentSource?.contentViewController.view.frame.contains(point) == true {
             return super.hitTest(point, with: event)
         }
