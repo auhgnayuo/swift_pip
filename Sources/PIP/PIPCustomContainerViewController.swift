@@ -470,7 +470,7 @@ extension PIPCustomContainerViewController: UIGestureRecognizerDelegate {
         let vSnap = 1000.0
         let vMax = 2000.0
         let resistance = 13.0
-        let strength = 90.0
+        let strength = 90.0*(contentView.bounds.width*contentView.bounds.height)/(160.0*90.0)
         let elasticity = 0.0
         let density = 1.0
         // Limit velocity to avoid excessive speed
